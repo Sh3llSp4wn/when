@@ -1,7 +1,8 @@
 CC=clang
-CFLAGS=-Wall -Wextra -Werror -ggdb
+CFLAGS=-Wall -Wextra -Werror -O2
 LDFLAGS=
 OBJS=file.o when.o main.o
+PREFIX=/usr
 
 all:
 	$(CC) $(CFLAGS) -c file.c
@@ -11,3 +12,6 @@ all:
 
 clean:
 	rm -f *.o when
+
+install: all
+	install -s when $(PREFIX)/bin/when
