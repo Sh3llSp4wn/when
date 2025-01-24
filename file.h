@@ -1,3 +1,6 @@
+/*
+* see when.c for licence
+*/
 #ifndef WHEN_FILE_H
 #define WHEN_FILE_H
 

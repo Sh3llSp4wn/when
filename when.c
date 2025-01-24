@@ -1,136 +1,96 @@
-/*
-*
-*
-* This file implements a simple program for defering shell executin until 
-* specified conditions are met
-*
-*
-*/
-
-// stdlib includes
-#include <getopt.h>
-#include <string.h>
-#include <stdlib.h>
+// mine
+#include "when.h"
+#include "file.h"
+// std library
+#include <time.h>
 #include <stdio.h>
 
-// internal includes
-#include "file.h"
+enum CheckCodes{
+  CONDITION_UNMET,
+  CONDITION_MET
+};
 
-// global error string to set
-const char *when_error = NULL;
+static int do_check(settings_s *settings) {
+  // handle file parameters
+  int file_sz = 0;
+  int file_extant = file_exists(settings->path);
 
-void usage() {
-  if (when_error) {
-    fprintf(stderr, "\nERROR: %s\n\n", when_error);
+  // set default conditon to be unmet
+  int condition = CONDITION_UNMET;
+  // if watch delete and file dne, met
+  if(settings->w_del && !file_extant)
+    condition = CONDITION_MET;
+  // if watch create and file exists, met
+  if(settings->w_creat && file_extant)
+    condition = CONDITION_MET;
+  if(file_extant) {
+    // get the file size
+    file_sz = file_size(settings->path);
+    // if watch zero and file len == 0, met
+    if(settings->w_zero && (file_sz == 0))
+      condition = CONDITION_MET;
+    // if watch size and file len >= size, met
+    if(settings->w_size && (file_sz >= settings->w_size))
+      condition = CONDITION_MET;
   }
-  fprintf(stderr, "when: [-vndez -s <int> -t <int> -c <int>] path\n"
-         "\t-n: negate\n"
-         "\t-d: watch for deletion\n"
-         "\t-e: watch for creation\n"
-         "\t-z: watch for filesize == 0\n"
-         "\t-s <integer value>: watch for filesize > val\n"
-         "\t-t <integer value>: stop after provided number of 'cycles'\n"
-         "\t-c <integer value>: the ammount of time in seconds per 'cycle'\n"
-         "\n\n'When' returns a status of 0 upon it's condition being met;\n"
-         "> 0 on other conditions that indicate the privided\n"
-         "conditions were not met (i.e. timeout); and < 0 on error.\n"
-  );
-  exit(-1);
+
+  // if negate, then negate the condition
+  if(settings->negate) condition = !condition;
+
+  return condition;
 }
 
-typedef struct {
-  int verbose;
-  int negate;
-  int w_del;
-  int w_creat;
-  int w_size;
-  int w_zero;
-  int cycle_length;
-  int number_of_cycles;
-  const char *path;
-} settings_s;
+#define ns 1
+#define us 1000 * ns
+#define ms 1000 * us
 
-extern int optind;
-extern char* optarg;
+static void do_sleep(settings_s *settings) {
+  // if cycle_length is default value -1, then sleep default
+  // otherwise sleep the specified amount of time
+  struct timespec wait_for;
+  int seconds  = 0;
+  int useconds = 0;
 
-int handle_arguments(settings_s *settings, int ac, char** av){
-  char opt;
-  int was_at_least_one_watch_set = 0;
+  if(settings->cycle_length == -1) {
+    // default to 250 ms
+    wait_for.tv_sec  = 0;
+    wait_for.tv_nsec = (250 * ms);
+  } else {
+    // convert to seconds and ms for use with nanosleep
+    seconds  = settings->cycle_length / 1000;
+    useconds = settings->cycle_length % 1000;
+    wait_for.tv_sec  = seconds;
+    wait_for.tv_nsec = (useconds * ms);
+  }
+  // no use for the remainder parameter
+  // because we are not handling signals
+  nanosleep(&wait_for, NULL);
+}
 
-  // validate that we got at least one opt
-  if (ac == 1) {
-    when_error = "NO ARGS";
-    return 1;
+int when(settings_s *settings) {
+  int ret = CONDITION_UNMET;
+  int cycles = 0;
+
+  if(settings->verbose) {
+    fprintf(stderr, "Watching \"%s\"\n", settings->path);
   }
 
-  // begin parsing command line flags
-  while((opt = getopt(ac, av, "vndezs:t:c:")) != -1){
-    switch(opt){
-      case 'v':
-        settings->verbose = 1;
-        break;
-      case 'n':
-        settings->negate  = 1;
-        break;
-      case 'd':
-        settings->w_del   = 1;
-        break;
-      case 'e':
-        settings->w_creat = 1;
-        break;
-      case 'z':
-        settings->w_zero  = 1;
-        break;
-      case 's':
-        settings->w_size  = atoi(optarg);
-        if(settings->w_size == 0) return 1;
-        break;
-      case 't':
-        settings->number_of_cycles = atoi(optarg);
-        if(settings->number_of_cycles == 0) return 1;
-        break;
-      case 'c':
-        settings->cycle_length = atoi(optarg);
-        if(settings->number_of_cycles == 0) return 1;
-        break;
-      default:
-        return 1;
-        break;
+  // while do_check returns unmet, keep checking
+  while((ret = do_check(settings)) == CONDITION_UNMET) {
+    // if we run out of cycles, break
+    if ((cycles++ > settings->number_of_cycles)
+      && (settings->number_of_cycles != -1)) break;
+    do_sleep(settings);
+    if(settings->verbose) {
+      // write-flush so the dots appear per cycle
+      fprintf(stderr, ".");
+      fflush(stderr);
     }
   }
-  // check if path was provided 
-  // and collect it as an argument
-  settings->path = av[optind];
-  if(settings->path == NULL) {
-    when_error = "NO PATH PROVIDED";
-    return 1; 
+  if(settings->verbose) {
+    // new line so we don't print on the same line as the dots
+    fprintf(stderr, "\n");
   }
-
-  was_at_least_one_watch_set =  settings->w_del;
-  was_at_least_one_watch_set |= settings->w_creat;
-  was_at_least_one_watch_set |= settings->w_size;
-  was_at_least_one_watch_set |= settings->w_zero;
-  if(!was_at_least_one_watch_set) {
-    when_error = "NO WATCH SET (-dzse)";
-    return 1;
-  }
-
-  return 0;
-}
-
-int main(int ac, char *av[]){
-  // empty settings struct
-  settings_s settings;
-
-  // zeroize the settings object's fields
-  memset(&settings, 0, sizeof(settings_s));
-
-  // default settings incase they are not provided
-  settings.cycle_length     = -1;  // default
-  settings.number_of_cycles = -1;  // default
-
-  if(handle_arguments(&settings, ac, av)){
-    usage(); // exits negitave
-  }
-  return 0;
+  // 0 (success) if met, 1 if unmet
+  return ret == CONDITION_UNMET;
 }

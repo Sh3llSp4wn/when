@@ -19,3 +19,6 @@ when -d Downloads/whatever.crdownload -- mv Downloads/whatever Documents/whateve
  * if file or dir exceeds a specific size
 * `-z`
  * if the file is empty or the dir contains no files
+
+## Licence 
+This project is BSD licenced

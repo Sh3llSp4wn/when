@@ -1,3 +1,6 @@
+/*
+* see when.c for licence
+*/
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
