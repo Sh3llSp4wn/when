@@ -1,8 +1,8 @@
 # when
 
-when is a highly portable comand line utility for reacting to conditions
+`when` is a highly portable comand line utility for reacting to filesystem conditions
 
-basic usage is as follows:
+A basic usage example is as follows:
 
 ```bash
 when -d Downloads/whatever.crdownload && mv Downloads/whatever Documents/whatever
@@ -10,7 +10,7 @@ when -d Downloads/whatever.crdownload && mv Downloads/whatever Documents/whateve
 
 ## Arguments
 * `-n`
- * negate the following flag
+ * negate the condition
 * `-d`
  * if file is deleted
 * `-e`
@@ -38,8 +38,11 @@ Needed functions are as follows
 * `nanosleep`
 * `memset`
 * `getopt`
+* `opendir`
+* `readdir`
+* `closedir`
 
-None of the above functions use anything outise of the POSIX93 capibilites expected from each function.
+None of the above functions use anything outise of the POSIX08 capibilites expected from each function.
 
 This project also does not enforce POSIXLY_CORRECT style arguments, but it is recomended to format the arguments this way
 

@@ -10,10 +10,14 @@ enum CheckCodes{
   CONDITION_MET
 };
 
+#define UNSIZED_FILE_TYPES(x) (S_ISCHR(x) | S_ISBLK(x) | S_ISFIFO(x) | S_ISSOCK(x))
+
 static int do_check(settings_s *settings) {
   // handle file parameters
+  static int has_printed_warning = 0;
   int file_sz = 0;
-  int file_extant = file_exists(settings->path);
+  struct stat statbuf;
+  int file_extant = file_exists(settings->path, &statbuf);
 
   // set default conditon to be unmet
   int condition = CONDITION_UNMET;
@@ -25,7 +29,22 @@ static int do_check(settings_s *settings) {
     condition = CONDITION_MET;
   if(file_extant) {
     // get the file size
-    file_sz = file_size(settings->path);
+    file_sz = file_size(settings->path, &statbuf);
+    // do a quick check to see if the file is 
+    // of a type that doesn't have a meaningful
+    // concept of size, or more specifically a size
+    // that changes
+    //
+    // Print a warning instead of treating this as fatal.
+    if(settings->verbose) {
+      if(UNSIZED_FILE_TYPES(statbuf.st_mode)){
+        if(!has_printed_warning) {
+          fprintf(stderr, "You appear to have selected a size option (-z, -s) on an unsized file type, this is likely invalid\n");
+          // don't repeat warnings
+          has_printed_warning++;
+        }
+      }
+    }
     // if watch zero and file len == 0, met
     if(settings->w_zero && (file_sz == 0))
       condition = CONDITION_MET;
