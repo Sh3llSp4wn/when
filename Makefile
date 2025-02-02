@@ -3,7 +3,7 @@ CC=clang
 CFLAGS=-Wall -Wextra -Werror -O0 -ggdb
 LDFLAGS=
 OBJS=file.o when.o main.o
-PREFIX=/usr
+PREFIX=/usr/local
 
 all:
 	$(CC) $(CFLAGS) -c file.c

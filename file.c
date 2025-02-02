@@ -17,7 +17,7 @@ static int get_num_dirents(const char *fname) {
   int ents = 0;  // where have the ent wives gone?
 
   // check if dir is real,
-  // (extemperanious check because
+  // (extraneous check because
   // of previous stat stuff, but
   // good practice anyway)
   head = opendir(fname);
@@ -69,13 +69,13 @@ void print_fstat(const char *fname) {
   clean_stat(fname, &statbuf, ret);
   if(ret) return; // failed don't print
 
-  printf("dev     = %lu\n", statbuf.st_dev     );
-  printf("ino     = %lu\n", statbuf.st_ino     );
+  printf("dev     = %lu\n", (unsigned long)statbuf.st_dev     );
+  printf("ino     = %lu\n", (unsigned long)statbuf.st_ino     );
   printf("mode    = %u\n",  statbuf.st_mode    );
-  printf("nlink   = %lu\n", statbuf.st_nlink   );
+  printf("nlink   = %lu\n", (unsigned long)statbuf.st_nlink   );
   printf("uid     = %u\n",  statbuf.st_uid     );
   printf("gid     = %u\n",  statbuf.st_gid     );
-  printf("rdev    = %lu\n", statbuf.st_rdev    );
-  printf("blksize = %ld\n", statbuf.st_blksize );
-  printf("blocks  = %ld\n", statbuf.st_blocks  );
+  printf("rdev    = %lu\n", (unsigned long)statbuf.st_rdev    );
+  printf("blksize = %ld\n", (unsigned long)statbuf.st_blksize );
+  printf("blocks  = %ld\n", (unsigned long)statbuf.st_blocks  );
 }

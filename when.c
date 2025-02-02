@@ -10,14 +10,16 @@ enum CheckCodes{
   CONDITION_MET
 };
 
+// code clarity for later
 #define UNSIZED_FILE_TYPES(x) (S_ISCHR(x) | S_ISBLK(x) | S_ISFIFO(x) | S_ISSOCK(x))
 
 static int do_check(settings_s *settings) {
   // handle file parameters
-  static int has_printed_warning = 0;
-  int file_sz = 0;
+  static int  has_printed_warning = 0;
+
   struct stat statbuf;
-  int file_extant = file_exists(settings->path, &statbuf);
+  int         file_sz     = 0;
+  int         file_extant = file_exists(settings->path, &statbuf);
 
   // set default conditon to be unmet
   int condition = CONDITION_UNMET;
@@ -66,9 +68,9 @@ static int do_check(settings_s *settings) {
 static void do_sleep(settings_s *settings) {
   // if cycle_length is default value -1, then sleep default
   // otherwise sleep the specified amount of time
+  int             seconds  = 0;
+  int             useconds = 0;
   struct timespec wait_for;
-  int seconds  = 0;
-  int useconds = 0;
 
   if(settings->cycle_length == -1) {
     // default to 250 ms
@@ -87,8 +89,8 @@ static void do_sleep(settings_s *settings) {
 }
 
 int when(settings_s *settings) {
-  int ret = CONDITION_UNMET;
   int cycles = 0;
+  int ret    = CONDITION_UNMET;
 
   if(settings->verbose) {
     fprintf(stderr, "Watching \"%s\"\n", settings->path);

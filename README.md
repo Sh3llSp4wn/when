@@ -1,11 +1,17 @@
 # when
 
-`when` is a highly portable comand line utility for reacting to filesystem conditions
+`when` is a highly portable comand line utility for reacting to filesystem conditions. This means no polling or OS or GNU specific features needed.
 
 A basic usage example is as follows:
 
 ```bash
+# move a chrome download somewhere else
 when -d Downloads/whatever.crdownload && mv Downloads/whatever Documents/whatever
+# OR
+when -e Downloads/whatever && mv Downloads/whatever Documents/
+
+# compress a log file after it reaches 10K
+when -s 10000 /var/log/some_log && xz -S "$(date +%d%m%y_%H%M).xz" /var/log/some_log
 ```
 
 ## Arguments

@@ -2,7 +2,7 @@
 * This file implements a simple program for defering shell executin until 
 * specified conditions are met
 *
-* This project and all associated files are BSD licenced
+* This project and all associated files are 3 clause BSD licenced
 */
 
 // stdlib includes
@@ -25,19 +25,20 @@ static void usage() {
   if (when_error) {
     fprintf(stderr, "\nERROR: %s\n\n", when_error);
   }
-  fprintf(stderr, "when: [-vndez -s <int> -t <int> -c <int>] path\n"
-         "\t-n: negate\n"
-         "\t-d: watch for deletion\n"
-         "\t-e: watch for creation\n"
-         "\t-z: watch for filesize == 0\n"
-         "\t-s <integer value>: watch for filesize > val\n"
-         "\t-t <integer value>: stop after provided number of 'cycles'\n"
-         "\t-c <integer value>: the ammount of time in seconds per 'cycle'\n"
-         "\n\n'When' returns a status of 0 upon it's condition being met;\n"
-         "> 0 on other conditions that indicate the privided\n"
-         "conditions were not met (i.e. timeout); and < 0 on error.\n\n"
-         "Implicitly all watch options are logically anded together, which\n"
-         "means that specifying -d and -e at the same time will never return\n\n"
+  fprintf(stderr, "when: [-hvndez -s <int> -t <int> -c <int>] path\n"
+          "\t-h: you are here\n"
+          "\t-n: negate\n"
+          "\t-d: watch for deletion\n"
+          "\t-e: watch for creation\n"
+          "\t-z: watch for filesize == 0\n"
+          "\t-s <integer value>: watch for filesize > val\n"
+          "\t-t <integer value>: stop after provided number of 'cycles'\n"
+          "\t-c <integer value>: the ammount of time in seconds per 'cycle'\n"
+          "\n\n'When' returns a status of 0 upon it's condition being met;\n"
+          "> 0 on other conditions that indicate the privided\n"
+          "conditions were not met (i.e. timeout); and < 0 on error.\n\n"
+          "Implicitly all watch options are logically anded together, which\n"
+          "means that specifying -d and -e at the same time will never return\n\n"
   );
   exit(-1);
 }
@@ -53,8 +54,11 @@ static int handle_arguments(settings_s *settings, int ac, char** av){
   }
 
   // begin parsing command line flags
-  while((opt = getopt(ac, av, "vndezs:t:c:")) != -1){
+  while((opt = getopt(ac, av, "hvndezs:t:c:")) != -1){
     switch(opt){
+      case 'h':
+        usage();
+	break; // never reached
       case 'v':
         settings->verbose = 1;
         break;
@@ -95,7 +99,10 @@ static int handle_arguments(settings_s *settings, int ac, char** av){
     return 1; 
   }
 
-  was_at_least_one_watch_set =  settings->w_del;
+  // or'n them all together looks better than
+  // a bunch of if statements, because we don't
+  // care about specifics, we just need a watch
+  was_at_least_one_watch_set  = settings->w_del;
   was_at_least_one_watch_set |= settings->w_creat;
   was_at_least_one_watch_set |= settings->w_size;
   was_at_least_one_watch_set |= settings->w_zero;

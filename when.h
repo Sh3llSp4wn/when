@@ -3,6 +3,8 @@
 
 #define DEFAULT_CYCLE_LENGTH 1
 
+/* settings collected
+ * from the user */
 typedef struct {
   int verbose;
   int negate;
@@ -15,6 +17,10 @@ typedef struct {
   const char *path;
 } settings_s;
 
+/*
+ * core implementation of the
+ * project's logic
+ */
 int when(settings_s *settings);
 
 #endif
